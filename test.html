@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plotly Example</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+  <style>
+    #plot1{
+      width: 100%;
+      max-width: 750px;
+      overflow: auto;
+    }
+    #plot2{
+      width: 100%;
+      max-width: 750px;
+      margin-top: 20px;
+      overflow: auto;
+    }
+  </style>
+  <div id="plot1" ></div>
+  <div id="plot2" ></div>
+  <script type="module">
+    import axios from "https://cdn.skypack.dev/axios";
+
+    const channelId = "2316796";
+    const apiKey = "L1I0HA3T5UAVJSWN";
+    let data = [];
+
+    // Hàm cập nhật dữ liệu và vẽ biểu đồ
+    const updateDataAndPlot = async () => {
+      const apiUrl = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&results=10`;
+      
+      try {
+        const response = await axios.get(apiUrl);
+        const newData = response.data.feeds;
+
+        // Chỉ cập nhật nếu có dữ liệu mới
+        if (newData.length > 0 && JSON.stringify(newData) !== JSON.stringify(data)) {
+          data = newData;
+
+          // Chuẩn bị dữ liệu cho biểu đồ Field 1
+          const trace1 = {
+            x: data.map((item) => item.created_at),
+            y: data.map((item) => parseFloat(item.field1)),
+            mode: "lines+markers",
+            name: "Field 1",
+          };
+
+          const graphData1 = [trace1];
+
+          // Tạo layout cho biểu đồ Field 1
+          const layout1 = {
+            title: "Biểu đồ Field 1 từ ThingSpeak",
+            xaxis: { title: "Thời gian" },
+            yaxis: { title: "Giá trị" },
+          };
+
+          // Vẽ biểu đồ Field 1
+          Plotly.newPlot("plot1", graphData1, layout1);
+
+          // Chuẩn bị dữ liệu cho biểu đồ Field 2
+          const trace2 = {
+            x: data.map((item) => item.created_at),
+            y: data.map((item) => parseFloat(item.field2)),
+            mode: "lines+markers",
+            name: "Field 2",
+          };
+
+          const graphData2 = [trace2];
+
+          // Tạo layout cho biểu đồ Field 2
+          const layout2 = {
+            title: "Biểu đồ Field 2 từ ThingSpeak",
+            xaxis: { title: "Thời gian" },
+            yaxis: { title: "Giá trị" },
+          };
+
+          // Vẽ biểu đồ Field 2
+          Plotly.newPlot("plot2", graphData2, layout2);
+        }
+      } catch (error) {
+        console.error('Error fetching data from ThingSpeak:', error);
+      }
+    };
+
+    // Cập nhật dữ liệu và vẽ biểu đồ mỗi giây
+    setInterval(updateDataAndPlot, 1000);
+  </script>
+</body>
+</html>
